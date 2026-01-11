@@ -1,0 +1,28 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+
+# State files (NEVER commit these - they contain secrets!)
+*.tfstate
+*.tfstate.backup
+
+# Plan files
+*.tfplan
+
+# Variable files with secrets (usually local overrides)
+*.tfvars
+*.tfvars.json
+
+# Override files (Terraform Cloud/Enterprise)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Local Terraform config
+.terraformrc
+terraform.rc

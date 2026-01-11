@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Serverless Image Resizer Gallery</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      text-align: center;
+    }
+    h1 {
+      margin: 40px 0 20px;
+      font-size: 3em;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    }
+    p.intro {
+      font-size: 1.2em;
+      max-width: 800px;
+      margin: 0 auto 40px;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .gallery img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .gallery img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+    }
+    .upload-info {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px auto;
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Serverless Image Resizer Gallery</h1>
+  
+  <div class="upload-info">
+    <p class="intro">
+      Upload any image to the <strong>originals</strong> container in Azure Storage — 
+      watch it magically appear here as a thumbnail in seconds!
+    </p>
+  </div>
+
+  <div class="gallery" id="gallery"></div>
+
+  <script>
+    // Replace these two values with YOUR storage account details
+    const accountName = "imgresizer6e50oz";  // ← YOUR storage account name
+    const container = "thumbnails";
+    const sasToken = "?sv=2023-01-03&ss=btqf&srt=sco&spr=https&st=2025-01-01T00%3A00%3A00Z&se=2026-01-01T00%3A00%3A00Z&sp=rwdlacupi&sig=YOUR_SAS_SIGNATURE";  // ← Generate Read SAS token
+
+    const baseUrl = `https://${accountName}.blob.core.windows.net/${container}${sasToken}`;
+
+    fetch(baseUrl + "&restype=container&comp=list")
+      .then(response => response.text())
+      .then(xmlText => {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlText, "text/xml");
+        const blobs = xml.getElementsByTagName("Name");
+
+        const gallery = document.getElementById("gallery");
+
+        for (let blob of blobs) {
+          const name = blob.textContent.trim();
+          if (name.startsWith("thumb_")) {
+            const img = document.createElement("img");
+            img.src = baseUrl + "/" + encodeURIComponent(name);
+            img.alt = name;
+            gallery.appendChild(img);
+          }
+        }
+
+        if (gallery.children.length === 0) {
+          gallery.innerHTML = "<p>No thumbnails yet — upload your first image!</p>";
+        }
+      })
+      .catch(error => {
+        console.error("Error loading gallery:", error);
+        document.getElementById("gallery").innerHTML = "<p>Error loading images. Check console.</p>";
+      });
+  </script>
+</body>
+</html>
